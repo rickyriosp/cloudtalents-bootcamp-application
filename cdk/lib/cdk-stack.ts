@@ -11,6 +11,9 @@ export class CdkStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
+    // For workflows triggered by release, this is the release tag created
+    // For tags it is refs/tags/<tag_name>. For example, refs/heads/feature-branch-1.
+    // https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/accessing-contextual-information-about-workflow-runs#github-context
     const gitubRef = process.env.version?.split('/') ?? ['0.0.0-Default'];
     const version = gitubRef![gitubRef?.length! - 1];
 
