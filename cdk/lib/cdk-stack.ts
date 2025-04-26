@@ -11,7 +11,8 @@ export class CdkStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
-    const version = process.env.version ?? '0.0.0-Default';
+    const gitubRef = process.env.version?.split('/') ?? ['0.0.0-Default'];
+    const version = gitubRef![gitubRef?.length! - 1];
 
     // ----------------------------------------------------------------------
     // OIDC Provider
