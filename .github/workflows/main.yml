@@ -1,0 +1,67 @@
+# This workflow gets triggered for push event in main branch
+
+name: Deploy CloudTalents Infrastructure to AWS
+
+on:
+  workflow_dispatch: # manual trigger
+  release:
+    types: [published]
+
+env:
+  AWS_REGION: us-east-1 # set this to your preferred AWS region, e.g. us-west-1
+  AWS_ACCOUNT: 879381279300 # set this to your account number
+  CDK_ROLE_NAME: GitHubCdkRole # set this to your IAM Role name
+  version: ${{ github.ref }}
+
+permissions:
+  id-token: write # This is required for requesting the JWT
+  contents: read # This is required for actions/checkout
+
+jobs:
+  infra:
+    name: CDK
+    runs-on: ubuntu-latest
+
+    # role name is stored as output and will be passed to the deploy job
+    outputs:
+      iam_role: ${{steps.cdk_out.outputs.role}}
+
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          audience: sts.amazonaws.com
+          aws-region: ${{ env.AWS_REGION }}
+          role-to-assume: arn:aws:iam::${{env.AWS_ACCOUNT}}:role/${{env.CDK_ROLE_NAME}}
+          role-session-name: github-session-cdk
+
+      - name: Checkout branch
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install AWS CDK
+        run: |
+          cd cdk
+          npm i -g aws-cdk
+          npm install
+
+      - name: Synth stack
+        run: |
+          cd cdk
+          cdk synth
+
+      # - name: Diff stack
+      #   run: |
+      #     cd cdk
+      #     cdk diff
+
+      - name: Deploy stack
+        run: |
+          cd cdk
+          cdk deploy --all --require-approval never
+
+      # - name: Outputs
+      #   id: cdk_out
+      #   run: |
+      #     echo "role=$(aws cloudformation describe-stacks --stack-name CloudtalentsBootcampStack --query "Stacks[0].Outputs[?OutputKey=='GitHubCdkRoleName'].OutputValue" --output text)" >> "$GITHUB_OUTPUT"
