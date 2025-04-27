@@ -37,7 +37,8 @@ export class CloudTalentsAppStack extends cdk.Stack {
     // ----------------------------------------------------------------------
     // EC2 Base Instance
     // ----------------------------------------------------------------------
-    const baseInstance = new BaseInstance(this, 'BaseInstance');
+    const randomId = Math.random().toString(16).substring(2);
+    const baseInstance = new BaseInstance(this, `BaseInstance-${randomId}`);
 
     // ----------------------------------------------------------------------
     // EC2 Base AMI

@@ -11,7 +11,7 @@ env:
   AWS_REGION: us-east-1 # set this to your preferred AWS region, e.g. us-west-1
   AWS_ACCOUNT: 879381279300 # set this to your account number
   CDK_ROLE_NAME: GitHubCdkRole # set this to your IAM Role name
-  gitubRef: ${{ github.ref }}
+  gitubRef: ${{github.ref}}
 
 permissions:
   id-token: write # This is required for requesting the JWT
@@ -24,15 +24,15 @@ jobs:
 
     # version and instance id are stored as output and will be passed to the next job
     outputs:
-      version: ${{ steps.cdk_out.outputs.version }}
-      instance_id: ${{ steps.cdk_out.outputs.instance }}
+      version: ${{steps.cdk_out.outputs.version}}
+      instance_id: ${{steps.cdk_out.outputs.instance}}
 
     steps:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
           audience: sts.amazonaws.com
-          aws-region: ${{ env.AWS_REGION }}
+          aws-region: ${{env.AWS_REGION}}
           role-to-assume: arn:aws:iam::${{env.AWS_ACCOUNT}}:role/${{env.CDK_ROLE_NAME}}
           role-session-name: github-session-cdk
 
@@ -44,9 +44,9 @@ jobs:
       - name: Generate Secrets
         run: |
           echo "#!/bin/bash" > $GITHUB_WORKSPACE/secrets.sh
-          echo "export SECRET_KEY='${{ secrets.SECRET_KEY }}'" >> $GITHUB_WORKSPACE/secrets.sh
-          echo "export DB_USER='${{ secrets.DB_USER }}'" >> $GITHUB_WORKSPACE/secrets.sh
-          echo "export DB_PASSWORD='${{ secrets.DB_PASSWORD }}'" >> $GITHUB_WORKSPACE/secrets.sh
+          echo "export SECRET_KEY='${{secrets.SECRET_KEY}}'" >> $GITHUB_WORKSPACE/secrets.sh
+          echo "export DB_USER='${{secrets.DB_USER}}'" >> $GITHUB_WORKSPACE/secrets.sh
+          echo "export DB_PASSWORD='${{secrets.DB_PASSWORD}}'" >> $GITHUB_WORKSPACE/secrets.sh
           cat $GITHUB_WORKSPACE/secrets.sh
 
       - name: Install AWS CDK
@@ -81,30 +81,30 @@ jobs:
     runs-on: ubuntu-latest
     needs: infra
     env:
-      VERSION: ${{ needs.infra.outputs.version }}
-      INSTANCE_ID: ${{ needs.infra.outputs.instance_id }}
+      VERSION: ${{needs.infra.outputs.version}}
+      INSTANCE_ID: ${{needs.infra.outputs.instance_id}}
 
     outputs:
-      ami_id: ${{ steps.cdk_out.outputs.ami }}
+      ami_id: ${{steps.cdk_out.outputs.ami}}
 
     steps:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
           audience: sts.amazonaws.com
-          aws-region: ${{ env.AWS_REGION }}
+          aws-region: ${{env.AWS_REGION}}
           role-to-assume: arn:aws:iam::${{env.AWS_ACCOUNT}}:role/${{env.CDK_ROLE_NAME}}
           role-session-name: github-session-cdk
 
       - name: Create AMI Image
         id: cdk_out
         run: |
+          aws ec2 stop-instances --instance-id ${{env.INSTANCE_ID}} --wait
           echo "ami=$(aws ec2 create-image --instance-id ${{env.INSTANCE_ID}} --name cloudtalents-startup-${{env.VERSION}} --query 'ImageId' --output text)" >> "$GITHUB_OUTPUT"
 
       - name: Terminate Base Instance
         run: |
           aws ec2 terminate-instances --instance-ids ${{env.INSTANCE_ID}}
-          aws ec2 describe-instances --instance-ids ${{env.INSTANCE_ID}}
           echo "Terminated instance: ${{env.INSTANCE_ID}}"
 
       - name: Delete Old AMIs
