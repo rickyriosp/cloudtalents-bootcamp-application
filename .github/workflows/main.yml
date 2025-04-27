@@ -99,7 +99,8 @@ jobs:
       - name: Create AMI Image
         id: cdk_out
         run: |
-          aws ec2 stop-instances --instance-id ${{env.INSTANCE_ID}} --wait
+          aws ec2 stop-instances --instance-id ${{env.INSTANCE_ID}}
+          aws ec2 wait instance-stopped --instance-id ${{env.INSTANCE_ID}}
           echo "ami=$(aws ec2 create-image --instance-id ${{env.INSTANCE_ID}} --name cloudtalents-startup-${{env.VERSION}} --query 'ImageId' --output text)" >> "$GITHUB_OUTPUT"
 
       - name: Terminate Base Instance
