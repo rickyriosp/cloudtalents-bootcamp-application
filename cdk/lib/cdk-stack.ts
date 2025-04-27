@@ -45,7 +45,7 @@ export class CdkStack extends cdk.Stack {
     const baseAmi = new CreateAMI(this, 'BaseAMI', {
       instanceId: baseInstance.instanceId,
       description: 'CloudTalents Startup Base AMI',
-      name: `cloudtalents-startup-v${version}`,
+      name: `cloudtalents-startup-${version}`,
       deleteInstance: true,
       deleteAmi: true,
       blockDeviceMappings: [
