@@ -71,13 +71,15 @@ export class BaseInstance extends Construct {
       //   ],
       userDataCausesReplacement: true,
       //   userData: ec2.UserData.forLinux(),
-      //init: ec2.CloudFormationInit.fromElements(),
+      init: ec2.CloudFormationInit.fromElements(
+        ec2.InitSource.fromGitHub('/opt/app', 'rickyriosp', 'cloudtalents-bootcamp-application'),
+      ),
     });
 
     baseInstance.userData.addExecuteFileCommand({
       filePath: path.join(__dirname, '..', 'resources', 'base_install.sh'),
     });
-    
+
     baseInstance.applyRemovalPolicy(cdk.RemovalPolicy.DESTROY);
 
     this.instanceId = baseInstance.instanceId;

@@ -10,5 +10,5 @@ INSTANCE_ID=$( curl -H "X-aws-ec2-metadata-token: $TOKEN" -v http://169.254.169.
 echo "AMI Hostname: $LOCAL_HOSTNAME" >> /home/ec2-user/config.txt
 echo "AMI InstanceId: $INSTANCE_ID" >> /home/ec2-user/config.txt
 
-cd /opt/app
+mkdir -p /opt/app && cd /opt/app
 git clone https://github.com/rickyriosp/cloudtalents-bootcamp-application.git
