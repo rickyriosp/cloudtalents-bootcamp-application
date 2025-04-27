@@ -49,6 +49,14 @@ export class CloudTalentsAppStack extends cdk.Stack {
     ec2Role.applyRemovalPolicy(cdk.RemovalPolicy.DESTROY);
 
     // ----------------------------------------------------------------------
+    // EC2 Instance Profile
+    // ----------------------------------------------------------------------
+    const ec2InstanceProfile = new iam.InstanceProfile(this, 'ec2-iprofile', {
+      instanceProfileName: 'ec2-iprofile',
+      role: ec2Role,
+    });
+
+    // ----------------------------------------------------------------------
     // EC2 Base Instance
     // ----------------------------------------------------------------------
     const randomId = Math.random().toString(16).substring(2);
@@ -57,6 +65,7 @@ export class CloudTalentsAppStack extends cdk.Stack {
       vpc: vpc,
       ec2Role: ec2Role,
       ec2SecurityGroup: ec2SecurityGroup,
+      ec2InstanceProfile: ec2InstanceProfile,
     });
 
     new cdk.CfnOutput(this, 'Version', {

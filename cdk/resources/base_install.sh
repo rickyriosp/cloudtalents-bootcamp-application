@@ -13,4 +13,4 @@ echo "AMI InstanceId: $INSTANCE_ID" >> /home/ec2-user/config.txt
 #mkdir -p /opt/app && cd /opt/app
 #git clone https://github.com/rickyriosp/cloudtalents-bootcamp-application.git
 
-echo "user script completed" >> /home/ec2/completed.txt
+echo "user script completed" >> /home/ec2-user/completed.txt

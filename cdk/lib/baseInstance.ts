@@ -10,6 +10,7 @@ export interface BaseInstanceProps {
   vpc: ec2.IVpc;
   ec2Role: iam.Role;
   ec2SecurityGroup: ec2.SecurityGroup;
+  ec2InstanceProfile: iam.InstanceProfile;
 }
 
 export class BaseInstance extends Construct {
@@ -30,6 +31,7 @@ export class BaseInstance extends Construct {
       }),
       securityGroup: props.ec2SecurityGroup,
       role: props.ec2Role,
+      instanceProfile: props.ec2InstanceProfile,
       machineImage: ec2.MachineImage.latestAmazonLinux2(),
       instanceType: ec2.InstanceType.of(ec2.InstanceClass.T2, ec2.InstanceSize.MICRO),
       associatePublicIpAddress: true,
