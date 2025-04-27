@@ -63,7 +63,6 @@ export class CloudTalentsAppStack extends cdk.Stack {
     const baseInstance = new BaseInstance(this, `BaseInstance-${randomId}`, {
       randomId: randomId,
       vpc: vpc,
-      ec2Role: ec2Role,
       ec2SecurityGroup: ec2SecurityGroup,
       ec2InstanceProfile: ec2InstanceProfile,
     });
