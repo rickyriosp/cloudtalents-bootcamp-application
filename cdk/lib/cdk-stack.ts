@@ -66,11 +66,11 @@ export class CloudTalentsAppStack extends cdk.Stack {
     //   ],
     // });
 
-    new cdk.CfnOutput(this, 'VersionOutput', {
+    new cdk.CfnOutput(this, 'Version', {
       value: version,
       exportName: 'Version',
     });
-    new cdk.CfnOutput(this, 'ImageIdOutput', {
+    new cdk.CfnOutput(this, 'ImageId', {
       value: baseInstance.instanceId,
       exportName: 'InstanceId',
     });
