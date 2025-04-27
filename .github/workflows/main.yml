@@ -74,7 +74,7 @@ jobs:
         id: cdk_out
         run: |
           echo "version=$(aws cloudformation describe-stacks --stack-name CloudTalentsAppStack --query "Stacks[0].Outputs[?OutputKey=='Version'].OutputValue" --output text)" >> "$GITHUB_OUTPUT"
-          echo "instance-id=$(aws cloudformation describe-stacks --stack-name CloudTalentsAppStack --query "Stacks[0].Outputs[?OutputKey=='InstanceId'].OutputValue" --output text)" >> "$GITHUB_OUTPUT"
+          echo "instance=$(aws cloudformation describe-stacks --stack-name CloudTalentsAppStack --query "Stacks[0].Outputs[?OutputKey=='InstanceId'].OutputValue" --output text)" >> "$GITHUB_OUTPUT"
 
   image:
     name: Create AMI
