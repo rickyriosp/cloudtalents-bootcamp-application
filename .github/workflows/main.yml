@@ -114,12 +114,12 @@ jobs:
 
           for ami_id in ${old_ami_ids}; do
             old_snap_ids=$(aws ec2 describe-images --image-ids $ami_id --query "Images[*].BlockDeviceMappings[*].Ebs.SnapshotId" --output text)
+            
+            aws ec2 deregister-image --image-id $ami_id
+            echo "Deleted AMI: $ami_id"
 
             for snap_id in ${old_snap_ids}; do
               aws ec2 delete-snapshot --snapshot-id $snap_id
               echo "Deleted snapshot: $snap_id"
             done
-
-            aws ec2 deregister-image --image-id $ami_id
-            echo "Deleted AMI: $ami_id"
           done
