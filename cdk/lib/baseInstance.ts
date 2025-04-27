@@ -18,6 +18,9 @@ export class BaseInstance extends Construct {
   constructor(scope: Construct, id: string, props: BaseInstanceProps) {
     super(scope, id);
 
+    const secrets = process.env.secrets ?? 'no secrets';
+    console.log(secrets);
+
     // ----------------------------------------------------------------------
     // EC2 Instance
     // ----------------------------------------------------------------------
@@ -30,7 +33,7 @@ export class BaseInstance extends Construct {
       }),
       securityGroup: props.ec2SecurityGroup,
       instanceProfile: props.ec2InstanceProfile,
-      machineImage: ec2.MachineImage.latestAmazonLinux2(),
+      machineImage: ec2.MachineImage.latestAmazonLinux2023(),
       instanceType: ec2.InstanceType.of(ec2.InstanceClass.T2, ec2.InstanceSize.MICRO),
       associatePublicIpAddress: true,
       blockDevices: [
@@ -46,6 +49,7 @@ export class BaseInstance extends Construct {
       //   userData: ec2.UserData.forLinux(),
       init: ec2.CloudFormationInit.fromElements(
         ec2.InitSource.fromGitHub('/opt/app', 'rickyriosp', 'cloudtalents-bootcamp-application'),
+        ec2.InitFile.fromString('/opt/app/secrets.sh', secrets),
       ),
     });
 
