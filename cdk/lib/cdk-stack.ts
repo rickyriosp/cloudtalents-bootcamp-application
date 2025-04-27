@@ -1,6 +1,5 @@
 import * as cdk from 'aws-cdk-lib';
 import * as iam from 'aws-cdk-lib/aws-iam';
-import { ImagePipeline } from 'cdk-image-pipeline';
 import { Construct } from 'constructs';
 
 import { BaseInstance } from './baseInstance';
@@ -66,8 +65,6 @@ export class CloudTalentsAppStack extends cdk.Stack {
     //     },
     //   ],
     // });
-
-    // const test = new ImagePipeline(this, 'ImagePipelineAWS', {});
 
     new cdk.CfnOutput(this, 'VersionOutput', {
       value: version,
