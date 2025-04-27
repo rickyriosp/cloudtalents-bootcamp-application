@@ -1,13 +1,11 @@
 import * as cdk from 'aws-cdk-lib';
+import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import { Construct } from 'constructs';
 
 import { BaseInstance } from './baseInstance';
-import { CreateAMI, ResourceType, VolumeType } from './createAMI';
 
 export class CloudTalentsAppStack extends cdk.Stack {
-  readonly githubProvider: iam.IOpenIdConnectProvider;
-
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
@@ -18,21 +16,37 @@ export class CloudTalentsAppStack extends cdk.Stack {
     const version = gitubRef![gitubRef?.length! - 1];
 
     // ----------------------------------------------------------------------
-    // OIDC Provider
+    // VPC
     // ----------------------------------------------------------------------
-    try {
-      this.githubProvider = iam.OpenIdConnectProvider.fromOpenIdConnectProviderArn(
-        this,
-        'GitHubOidcProvider',
-        `arn:${this.partition}:iam::${this.account}:oidc-provider/token.actions.githubusercontent.com`,
-      );
-    } catch (error) {
-      this.githubProvider = new iam.OpenIdConnectProvider(this, 'GitHubOidcProvider', {
-        url: 'https://token.actions.githubusercontent.com',
-        clientIds: ['sts.amazonaws.com'],
-        thumbprints: ['6938fd4d98bab03faadb97b34396831e3780aea1'],
-      });
-    }
+    const vpcId = process.env.vpcId;
+
+    const vpc = ec2.Vpc.fromLookup(this, 'vpc', {
+      vpcId: vpcId,
+    });
+
+    // ----------------------------------------------------------------------
+    // Security Group
+    // ----------------------------------------------------------------------
+    const ec2SecurityGroup = new ec2.SecurityGroup(this, 'ec2-sg', {
+      vpc: vpc,
+      allowAllOutbound: true,
+      securityGroupName: 'ec2-ssh-access',
+      description: 'Allow EC2 SSH Access',
+    });
+
+    ec2SecurityGroup.addIngressRule(ec2.Peer.anyIpv4(), ec2.Port.SSH, 'SSH Access');
+    ec2SecurityGroup.applyRemovalPolicy(cdk.RemovalPolicy.DESTROY);
+
+    // ----------------------------------------------------------------------
+    // EC2 Role
+    // ----------------------------------------------------------------------
+    const ec2Role = new iam.Role(this, 'ec2-role', {
+      roleName: 'ec2-role',
+      assumedBy: new iam.ServicePrincipal('ec2.amazonaws.com'),
+      managedPolicies: [iam.ManagedPolicy.fromAwsManagedPolicyName('AmazonSSMManagedInstanceCore')],
+    });
+
+    ec2Role.applyRemovalPolicy(cdk.RemovalPolicy.DESTROY);
 
     // ----------------------------------------------------------------------
     // EC2 Base Instance
@@ -40,34 +54,10 @@ export class CloudTalentsAppStack extends cdk.Stack {
     const randomId = Math.random().toString(16).substring(2);
     const baseInstance = new BaseInstance(this, `BaseInstance-${randomId}`, {
       randomId: randomId,
+      vpc: vpc,
+      ec2Role: ec2Role,
+      ec2SecurityGroup: ec2SecurityGroup,
     });
-
-    // ----------------------------------------------------------------------
-    // EC2 Base AMI
-    // ----------------------------------------------------------------------
-    // const baseAmi = new CreateAMI(this, 'BaseAMI', {
-    //   instanceId: baseInstance.instanceId,
-    //   description: 'CloudTalents Startup Base AMI',
-    //   name: `cloudtalents-startup-${version}`,
-    //   deleteInstance: true,
-    //   deleteAmi: true,
-    //   blockDeviceMappings: [
-    //     {
-    //       deviceName: '/dev/xvda',
-    //       ebs: {
-    //         volumeSize: 8,
-    //         volumeType: VolumeType.GP3,
-    //         deleteOnTermination: true,
-    //       },
-    //     },
-    //   ],
-    //   tagSpecifications: [
-    //     {
-    //       resourceType: ResourceType.IMAGE,
-    //       tags: [{ key: 'version', value: version }],
-    //     },
-    //   ],
-    // });
 
     new cdk.CfnOutput(this, 'Version', {
       value: version,
