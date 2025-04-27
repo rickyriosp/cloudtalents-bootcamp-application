@@ -18,8 +18,14 @@ export class BaseInstance extends Construct {
   constructor(scope: Construct, id: string, props: BaseInstanceProps) {
     super(scope, id);
 
-    const secrets = process.env.secrets ?? 'no secrets';
-    console.log(secrets);
+    const secret_key = process.env.SECRET_KEY ?? '';
+    const db_user = process.env.DB_USER ?? '';
+    const db_password = process.env.DB_PASSWORD ?? '';
+    const db_secrets = `#!/bin/bash
+      export SECRET_KEY='${secret_key}'
+      export DB_USER='${db_user}'
+      export DB_PASSWORD='${db_password}'
+    `;
 
     // ----------------------------------------------------------------------
     // EC2 Instance
@@ -49,7 +55,7 @@ export class BaseInstance extends Construct {
       //   userData: ec2.UserData.forLinux(),
       init: ec2.CloudFormationInit.fromElements(
         ec2.InitSource.fromGitHub('/opt/app', 'rickyriosp', 'cloudtalents-bootcamp-application'),
-        ec2.InitFile.fromString('/opt/app/secrets.sh', secrets),
+        ec2.InitFile.fromString('/opt/app/secrets.sh', db_secrets),
       ),
     });
 
