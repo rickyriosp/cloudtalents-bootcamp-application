@@ -1,11 +1,12 @@
 import * as cdk from 'aws-cdk-lib';
 import * as iam from 'aws-cdk-lib/aws-iam';
+import { ImagePipeline } from 'cdk-image-pipeline';
 import { Construct } from 'constructs';
 
 import { BaseInstance } from './baseInstance';
 import { CreateAMI, ResourceType, VolumeType } from './createAMI';
 
-export class CdkStack extends cdk.Stack {
+export class CloudTalentsAppStack extends cdk.Stack {
   readonly githubProvider: iam.IOpenIdConnectProvider;
 
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -14,7 +15,7 @@ export class CdkStack extends cdk.Stack {
     // For workflows triggered by release, this is the release tag created
     // For tags it is refs/tags/<tag_name>. For example, refs/heads/feature-branch-1.
     // https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/accessing-contextual-information-about-workflow-runs#github-context
-    const gitubRef = process.env.version?.split('/') ?? ['0.0.0-Default'];
+    const gitubRef = process.env.gitubRef?.split('/') ?? ['0.0.0-Default'];
     const version = gitubRef![gitubRef?.length! - 1];
 
     // ----------------------------------------------------------------------
@@ -42,28 +43,39 @@ export class CdkStack extends cdk.Stack {
     // ----------------------------------------------------------------------
     // EC2 Base AMI
     // ----------------------------------------------------------------------
-    const baseAmi = new CreateAMI(this, 'BaseAMI', {
-      instanceId: baseInstance.instanceId,
-      description: 'CloudTalents Startup Base AMI',
-      name: `cloudtalents-startup-${version}`,
-      deleteInstance: true,
-      deleteAmi: true,
-      blockDeviceMappings: [
-        {
-          deviceName: '/dev/xvda',
-          ebs: {
-            volumeSize: 8,
-            volumeType: VolumeType.GP3,
-            deleteOnTermination: true,
-          },
-        },
-      ],
-      tagSpecifications: [
-        {
-          resourceType: ResourceType.IMAGE,
-          tags: [{ key: 'version', value: version }],
-        },
-      ],
+    // const baseAmi = new CreateAMI(this, 'BaseAMI', {
+    //   instanceId: baseInstance.instanceId,
+    //   description: 'CloudTalents Startup Base AMI',
+    //   name: `cloudtalents-startup-${version}`,
+    //   deleteInstance: true,
+    //   deleteAmi: true,
+    //   blockDeviceMappings: [
+    //     {
+    //       deviceName: '/dev/xvda',
+    //       ebs: {
+    //         volumeSize: 8,
+    //         volumeType: VolumeType.GP3,
+    //         deleteOnTermination: true,
+    //       },
+    //     },
+    //   ],
+    //   tagSpecifications: [
+    //     {
+    //       resourceType: ResourceType.IMAGE,
+    //       tags: [{ key: 'version', value: version }],
+    //     },
+    //   ],
+    // });
+
+    // const test = new ImagePipeline(this, 'ImagePipelineAWS', {});
+
+    new cdk.CfnOutput(this, 'VersionOutput', {
+      value: version,
+      exportName: 'Version',
+    });
+    new cdk.CfnOutput(this, 'ImageIdOutput', {
+      value: baseInstance.instanceId,
+      exportName: 'InstanceId',
     });
   }
 }

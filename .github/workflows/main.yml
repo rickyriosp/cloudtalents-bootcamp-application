@@ -11,7 +11,7 @@ env:
   AWS_REGION: us-east-1 # set this to your preferred AWS region, e.g. us-west-1
   AWS_ACCOUNT: 879381279300 # set this to your account number
   CDK_ROLE_NAME: GitHubCdkRole # set this to your IAM Role name
-  version: ${{ github.ref }}
+  gitubRef: ${{ github.ref }}
 
 permissions:
   id-token: write # This is required for requesting the JWT
@@ -22,9 +22,10 @@ jobs:
     name: CDK
     runs-on: ubuntu-latest
 
-    # role name is stored as output and will be passed to the deploy job
-    # outputs:
-    #   iam_role: ${{ steps.cdk_out.outputs.role }}
+    # version and instance id are stored as output and will be passed to the next job
+    outputs:
+      version: ${{ steps.cdk_out.outputs.version }}
+      instance_id: ${{ steps.cdk_out.outputs.instance }}
 
     steps:
       - name: Configure AWS credentials
@@ -47,7 +48,7 @@ jobs:
           echo "export DB_USER='${{ secrets.DB_USER }}'" >> $GITHUB_WORKSPACE/secrets.sh
           echo "export DB_PASSWORD='${{ secrets.DB_PASSWORD }}'" >> $GITHUB_WORKSPACE/secrets.sh
           cat $GITHUB_WORKSPACE/secrets.sh
-      
+
       - name: Install AWS CDK
         run: |
           cd cdk
@@ -69,7 +70,54 @@ jobs:
           cd cdk
           cdk deploy --all --require-approval never
 
-      # - name: Outputs
-      #   id: cdk_out
-      #   run: |
-      #     echo "role=$(aws cloudformation describe-stacks --stack-name CloudtalentsBootcampStack --query "Stacks[0].Outputs[?OutputKey=='GitHubCdkRoleName'].OutputValue" --output text)" >> "$GITHUB_OUTPUT"
+      - name: Outputs
+        id: cdk_out
+        run: |
+          echo "version=$(aws cloudformation describe-stacks --stack-name CloudTalentsAppStack --query "Stacks[0].Outputs[?OutputKey=='Version'].OutputValue" --output text)" >> "$GITHUB_OUTPUT"
+          echo "instance-id=$(aws cloudformation describe-stacks --stack-name CloudTalentsAppStack --query "Stacks[0].Outputs[?OutputKey=='InstanceId'].OutputValue" --output text)" >> "$GITHUB_OUTPUT"
+
+  image:
+    name: Create AMI
+    runs-on: ubuntu-latest
+    env:
+      VERSION: ${{ needs.infra.outputs.version }}
+      INSTANCE_ID: ${{ needs.infra.outputs.instance_id }}
+
+    outputs:
+      ami_id: ${{ steps.cdk_out.outputs.ami }}
+
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          audience: sts.amazonaws.com
+          aws-region: ${{ env.AWS_REGION }}
+          role-to-assume: arn:aws:iam::${{env.AWS_ACCOUNT}}:role/${{env.CDK_ROLE_NAME}}
+          role-session-name: github-session-cdk
+
+      - name: Create AMI Image
+        id: cdk_out
+        run: |
+          echo "ami=$(aws ec2 create-image --instance-id ${{env.INSTANCE_ID}} --name cloudtalents-startup-${{env.VERSION}} --query 'ImageId' --output text)" >> "$GITHUB_OUTPUT"
+
+      - name: Terminate Base Instance
+        run: |
+          aws ec2 terminate-instances --instance-ids ${{env.INSTANCE_ID}}
+          aws ec2 describe-instances --instance-ids ${{env.INSTANCE_ID}}
+          echo "Terminated instance: ${{env.INSTANCE_ID}}"
+
+      - name: Delete Old AMIs
+        run: |
+          old_ami_ids=$(aws ec2 describe-images --owners self --query "Images[?contains(Name, 'cloudtalents-startup-${{env.VERSION}}') == \`false\`].ImageId" --output text)
+
+          for ami_id in ${old_ami_ids}; do
+            old_snap_ids=$(aws ec2 describe-images --image-ids $ami_id --query "Images[*].BlockDeviceMappings[*].Ebs.SnapshotId" --output text)
+
+            for snap_id in ${old_snap_ids}; do
+              aws ec2 delete-snapshot --snapshot-id $snap_id
+              echo "Deleted snapshot: $snap_id"
+            done
+
+            aws ec2 deregister-image --image-id $ami_id
+            echo "Deleted AMI: $ami_id"
+          done

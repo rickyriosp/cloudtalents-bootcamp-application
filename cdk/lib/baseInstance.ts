@@ -60,15 +60,15 @@ export class BaseInstance extends Construct {
       machineImage: ec2.MachineImage.latestAmazonLinux2(),
       instanceType: ec2.InstanceType.of(ec2.InstanceClass.T2, ec2.InstanceSize.MICRO),
       associatePublicIpAddress: true,
-      //   blockDevices: [
-      //     {
-      //       deviceName: '/dev/xvda',
-      //       volume: ec2.BlockDeviceVolume.ebs(10, {
-      //         volumeType: ec2.EbsDeviceVolumeType.GENERAL_PURPOSE_SSD_GP3,
-      //         deleteOnTermination: true,
-      //       }),
-      //     },
-      //   ],
+        blockDevices: [
+          {
+            deviceName: '/dev/xvda',
+            volume: ec2.BlockDeviceVolume.ebs(10, {
+              volumeType: ec2.EbsDeviceVolumeType.GENERAL_PURPOSE_SSD_GP3,
+              deleteOnTermination: true,
+            }),
+          },
+        ],
       userDataCausesReplacement: true,
       //   userData: ec2.UserData.forLinux(),
       init: ec2.CloudFormationInit.fromElements(
