@@ -3,6 +3,8 @@ import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import { Construct } from 'constructs';
 
+import path = require('path');
+
 export interface BaseInstanceProps {}
 
 export class BaseInstance extends Construct {
@@ -67,11 +69,15 @@ export class BaseInstance extends Construct {
       //       }),
       //     },
       //   ],
-      //userData: ec2.UserData.forLinux(),
+      userDataCausesReplacement: true,
+      //   userData: ec2.UserData.forLinux(),
       //init: ec2.CloudFormationInit.fromElements(),
     });
+
+    baseInstance.userData.addExecuteFileCommand({
+      filePath: path.join(__dirname, '..', 'resources', 'base_install.sh'),
+    });
     
-    // baseInstance.addUserData()
     baseInstance.applyRemovalPolicy(cdk.RemovalPolicy.DESTROY);
 
     this.instanceId = baseInstance.instanceId;
