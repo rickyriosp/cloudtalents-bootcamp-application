@@ -109,7 +109,7 @@ jobs:
 
       - name: Delete Old AMIs
         run: |
-          old_ami_ids=$(aws ec2 describe-images --owners self --query "Images[?contains(Name, 'cloudtalents-startup-${{env.VERSION}}') == \`false\`].ImageId" --output text)
+          old_ami_ids=$(aws ec2 describe-images --owners self --filters "Name=name,Values=cloudtalents-startup-*" --query "Images[?contains(Name, 'cloudtalents-startup-${{env.VERSION}}') == \`false\`].ImageId" --output text)
 
           for ami_id in ${old_ami_ids}; do
             old_snap_ids=$(aws ec2 describe-images --image-ids $ami_id --query "Images[*].BlockDeviceMappings[*].Ebs.SnapshotId" --output text)
