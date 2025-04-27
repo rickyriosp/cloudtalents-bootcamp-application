@@ -70,7 +70,7 @@ export class CloudTalentsAppStack extends cdk.Stack {
       value: version,
       exportName: 'Version',
     });
-    new cdk.CfnOutput(this, 'ImageId', {
+    new cdk.CfnOutput(this, 'InstanceId', {
       value: baseInstance.instanceId,
       exportName: 'InstanceId',
     });
