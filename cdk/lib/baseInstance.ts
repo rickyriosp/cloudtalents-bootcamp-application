@@ -22,10 +22,10 @@ export class BaseInstance extends Construct {
     const db_user = process.env.DB_USER ?? '';
     const db_password = process.env.DB_PASSWORD ?? '';
     const db_secrets = `#!/bin/bash
-      export SECRET_KEY='${secret_key}'
-      export DB_USER='${db_user}'
-      export DB_PASSWORD='${db_password}'
-    `;
+export SECRET_KEY=${secret_key}
+export DB_USER=${db_user}
+export DB_PASSWORD=${db_password}
+`;
 
     // ----------------------------------------------------------------------
     // EC2 Instance
