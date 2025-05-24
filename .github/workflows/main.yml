@@ -1,6 +1,6 @@
-# This workflow gets triggered for push event in main branch
+# This workflow gets triggered when a new release is created
 
-name: Deploy CloudTalents Infrastructure to AWS
+name: Deploy CloudTalents AMI Infrastructure to AWS
 
 on:
   workflow_dispatch: # manual trigger
@@ -62,23 +62,23 @@ jobs:
       - name: Synth stack
         run: |
           cd cdk
-          cdk synth
+          cdk synth CloudTalentsAmiStack
 
       # - name: Diff stack
       #   run: |
       #     cd cdk
-      #     cdk diff
+      #     cdk diff CloudTalentsAmiStack
 
       - name: Deploy stack
         run: |
           cd cdk
-          cdk deploy --all --require-approval never
+          cdk deploy CloudTalentsAmiStack --require-approval never
 
       - name: Outputs
         id: cdk_out
         run: |
-          echo "version=$(aws cloudformation describe-stacks --stack-name CloudTalentsAppStack --query "Stacks[0].Outputs[?OutputKey=='Version'].OutputValue" --output text)" >> "$GITHUB_OUTPUT"
-          echo "instance=$(aws cloudformation describe-stacks --stack-name CloudTalentsAppStack --query "Stacks[0].Outputs[?OutputKey=='InstanceId'].OutputValue" --output text)" >> "$GITHUB_OUTPUT"
+          echo "version=$(aws cloudformation describe-stacks --stack-name CloudTalentsAmiStack --query "Stacks[0].Outputs[?OutputKey=='Version'].OutputValue" --output text)" >> "$GITHUB_OUTPUT"
+          echo "instance=$(aws cloudformation describe-stacks --stack-name CloudTalentsAmiStack --query "Stacks[0].Outputs[?OutputKey=='InstanceId'].OutputValue" --output text)" >> "$GITHUB_OUTPUT"
 
   image:
     name: Create AMI
