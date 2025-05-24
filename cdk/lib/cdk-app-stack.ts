@@ -3,11 +3,13 @@ import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import { Construct } from 'constructs';
 
+import path = require('path');
+
 export class CloudTalentsAppStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
-    // AMI version to use - from GitHub Actions param
+    // AMI version to use - from GitHub Actions input param
     const version = process.env.version;
     console.log(`AMI name: cloudtalents-startup-${version}`);
 
@@ -72,6 +74,10 @@ export class CloudTalentsAppStack extends cdk.Stack {
         //   imageId: [''],
         // },
       }),
+    });
+
+    ec2Instance.userData.addExecuteFileCommand({
+      filePath: path.join(__dirname, '..', 'resources', 'new_install.sh'),
     });
   }
 }
