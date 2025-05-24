@@ -43,4 +43,4 @@ jobs:
       - name: Destroy stack
         run: |
           cd cdk
-          cdk destroy --all --require-approval never
+          cdk destroy --all --force
