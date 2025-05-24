@@ -15,6 +15,7 @@ env:
   AWS_ACCOUNT: 879381279300 # set this to your account number
   CDK_ROLE_NAME: GitHubCdkRole # set this to your IAM Role name
   gitubRef: ${{github.ref}}
+  version: ${{inputs.version}}
 
 permissions:
   id-token: write # This is required for requesting the JWT
