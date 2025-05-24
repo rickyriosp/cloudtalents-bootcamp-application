@@ -76,6 +76,7 @@ export class CloudTalentsAppStack extends cdk.Stack {
         //   imageId: [''],
         // },
       }),
+      userDataCausesReplacement: true,
     });
 
     ec2Instance.userData.addExecuteFileCommand({
