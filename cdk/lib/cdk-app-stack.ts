@@ -79,5 +79,7 @@ export class CloudTalentsAppStack extends cdk.Stack {
     ec2Instance.userData.addExecuteFileCommand({
       filePath: path.join(__dirname, '..', 'resources', 'new_install.sh'),
     });
+
+    ec2Instance.applyRemovalPolicy(cdk.RemovalPolicy.DESTROY);
   }
 }
