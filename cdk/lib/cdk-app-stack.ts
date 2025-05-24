@@ -3,14 +3,13 @@ import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import { Construct } from 'constructs';
 
-import { BaseInstance } from './baseInstance';
-
 export class CloudTalentsAppStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
     // AMI version to use - from GitHub Actions param
     const version = process.env.version;
+    console.log(`AMI name: cloudtalents-startup-${version}`);
 
     // ----------------------------------------------------------------------
     // VPC
@@ -32,11 +31,7 @@ export class CloudTalentsAppStack extends cdk.Stack {
     });
 
     ec2SecurityGroup.addIngressRule(ec2.Peer.anyIpv4(), ec2.Port.HTTP, 'Allow HTTP Access');
-    ec2SecurityGroup.addEgressRule(
-      ec2.Peer.anyIpv4(),
-      ec2.Port.allTraffic(),
-      'Allow ALL Outbound Access',
-    );
+    // ec2SecurityGroup.addEgressRule(ec2.Peer.anyIpv4(), ec2.Port.allTraffic(),'Allow ALL Outbound Access');
     ec2SecurityGroup.applyRemovalPolicy(cdk.RemovalPolicy.DESTROY);
 
     // ----------------------------------------------------------------------
