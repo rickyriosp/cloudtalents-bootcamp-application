@@ -65,6 +65,8 @@ export class CloudTalentsAppStack extends cdk.Stack {
         subnets: vpc.publicSubnets,
         onePerAz: false,
       }),
+      securityGroup: ec2SecurityGroup,
+      instanceProfile: ec2InstanceProfile,
       instanceType: ec2.InstanceType.of(ec2.InstanceClass.T2, ec2.InstanceSize.MICRO),
       associatePublicIpAddress: true,
       machineImage: ec2.MachineImage.lookup({
