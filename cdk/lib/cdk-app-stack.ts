@@ -9,11 +9,8 @@ export class CloudTalentsAppStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
-    // For workflows triggered by release, this is the release tag created
-    // For tags it is refs/tags/<tag_name>. For example, refs/heads/feature-branch-1.
-    // https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/accessing-contextual-information-about-workflow-runs#github-context
-    const gitubRef = process.env.gitubRef?.split('/') ?? ['0.0.0-Default'];
-    const version = gitubRef![gitubRef?.length! - 1];
+    // AMI version to use - from GitHub Actions param
+    const version = process.env.version;
 
     // ----------------------------------------------------------------------
     // VPC
@@ -27,14 +24,19 @@ export class CloudTalentsAppStack extends cdk.Stack {
     // ----------------------------------------------------------------------
     // Security Group
     // ----------------------------------------------------------------------
-    const ec2SecurityGroup = new ec2.SecurityGroup(this, 'ec2-sg', {
+    const ec2SecurityGroup = new ec2.SecurityGroup(this, 'ec2-http-sg', {
       vpc: vpc,
       allowAllOutbound: true,
-      securityGroupName: 'ec2-ssh-access',
-      description: 'Allow EC2 SSH Access',
+      securityGroupName: 'ec2-http-access',
+      description: 'Allow EC2 HTTP Access',
     });
 
-    ec2SecurityGroup.addIngressRule(ec2.Peer.anyIpv4(), ec2.Port.SSH, 'SSH Access');
+    ec2SecurityGroup.addIngressRule(ec2.Peer.anyIpv4(), ec2.Port.HTTP, 'Allow HTTP Access');
+    ec2SecurityGroup.addEgressRule(
+      ec2.Peer.anyIpv4(),
+      ec2.Port.allTraffic(),
+      'Allow ALL Outbound Access',
+    );
     ec2SecurityGroup.applyRemovalPolicy(cdk.RemovalPolicy.DESTROY);
 
     // ----------------------------------------------------------------------
@@ -57,23 +59,24 @@ export class CloudTalentsAppStack extends cdk.Stack {
     });
 
     // ----------------------------------------------------------------------
-    // EC2 Base Instance
+    // EC2 Instance
     // ----------------------------------------------------------------------
-    const randomId = Math.random().toString(16).substring(2);
-    const baseInstance = new BaseInstance(this, `BaseInstance-${randomId}`, {
-      randomId: randomId,
+    const ec2Instance = new ec2.Instance(this, 'ec2-instance', {
+      instanceName: 'cloudtalents-app',
       vpc: vpc,
-      ec2SecurityGroup: ec2SecurityGroup,
-      ec2InstanceProfile: ec2InstanceProfile,
-    });
-
-    new cdk.CfnOutput(this, 'Version', {
-      value: version,
-      exportName: 'Version',
-    });
-    new cdk.CfnOutput(this, 'InstanceId', {
-      value: baseInstance.instanceId,
-      exportName: 'InstanceId',
+      vpcSubnets: vpc.selectSubnets({
+        subnets: vpc.publicSubnets,
+        onePerAz: false,
+      }),
+      instanceType: ec2.InstanceType.of(ec2.InstanceClass.T2, ec2.InstanceSize.MICRO),
+      associatePublicIpAddress: true,
+      machineImage: ec2.MachineImage.lookup({
+        name: `cloudtalents-startup-${version}`,
+        owners: [this.account],
+        // filters: {
+        //   imageId: [''],
+        // },
+      }),
     });
   }
 }
