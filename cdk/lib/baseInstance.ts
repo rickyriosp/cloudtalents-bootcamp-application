@@ -71,7 +71,7 @@ export DB_PASSWORD=${db_password}
     });
 
     baseInstance.userData.addExecuteFileCommand({
-      filePath: path.join(__filename, '..', '..', 'setup.sh'),
+      filePath: path.join(__filename, '..', '..', '..', 'setup.sh'),
     });
 
     baseInstance.applyRemovalPolicy(cdk.RemovalPolicy.DESTROY);
