@@ -39,7 +39,14 @@ export DB_PASSWORD=${db_password}
       }),
       securityGroup: props.ec2SecurityGroup,
       instanceProfile: props.ec2InstanceProfile,
-      machineImage: ec2.MachineImage.latestAmazonLinux2023(),
+      // machineImage: ec2.MachineImage.genericLinux({
+      //   //https://cloud-images.ubuntu.com/locator/ec2/
+      //   'us-east-1': 'ami-09b9b5665040249ad'
+      // }),
+      machineImage: ec2.MachineImage.fromSsmParameter(
+        '/aws/service/canonical/ubuntu/server/20.04/stable/current/amd64/hvm/ebs-gp2/ami-id',
+        { os: ec2.OperatingSystemType.LINUX },
+      ),
       instanceType: ec2.InstanceType.of(ec2.InstanceClass.T2, ec2.InstanceSize.MICRO),
       associatePublicIpAddress: true,
       blockDevices: [

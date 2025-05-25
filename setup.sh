@@ -7,7 +7,7 @@ APP_DIR="/opt/app"
 #
 # Relevant link: https://www.geeksforgeeks.org/chown-command-in-linux-with-examples/
 #################################################################################################
-TODO
+sudo chown -R ec2-user:ec2-user $APP_DIR
 
 #################################################################################################
 # Update Ubuntu's package list and install the following dependencies:
@@ -19,7 +19,13 @@ TODO
 # 
 # Relevant link: https://ubuntu.com/server/docs/package-management
 #################################################################################################
-TODO
+sudo apt-get update -y
+sudo apt-get upgrade -y
+sudo apt-get install python3-pip -y
+sudo apt-get install python3-venv -y
+sudo apt-get install postgresql -y
+sudo apt-get install postgresql-contrib -y
+sudo apt-get install nginx -y
 
 #################################################################################################
 # Start and enable the PostgreSQL service
