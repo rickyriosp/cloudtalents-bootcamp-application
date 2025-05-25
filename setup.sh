@@ -14,7 +14,7 @@ sudo echo "AMI InstanceId: $INSTANCE_ID" >> /home/ec2-user/config.txt
 #
 # Relevant link: https://www.geeksforgeeks.org/chown-command-in-linux-with-examples/
 #################################################################################################
-sudo chown -R ec2-user:ec2-user $APP_DIR
+sudo chown -R ubuntu:ubuntu $APP_DIR
 
 #################################################################################################
 # Update Ubuntu's package list and install the following dependencies:
