@@ -32,7 +32,7 @@ export DB_PASSWORD=${db_password}
     // ----------------------------------------------------------------------
     const userData = ec2.UserData.forLinux();
     userData.addExecuteFileCommand({
-      filePath: '/opt/app/setup.sh',
+      filePath: '../../../setup.sh',
     });
 
     const baseInstance = new ec2.Instance(this, `ec2-instance-${props.randomId}`, {
@@ -53,7 +53,7 @@ export DB_PASSWORD=${db_password}
         '/aws/service/canonical/ubuntu/server/24.04/stable/current/amd64/hvm/ebs-gp3/ami-id',
         {
           os: ec2.OperatingSystemType.LINUX,
-          userData: userData,
+          // userData: userData,
         },
       ),
       instanceType: ec2.InstanceType.of(ec2.InstanceClass.T2, ec2.InstanceSize.MICRO),
@@ -72,6 +72,7 @@ export DB_PASSWORD=${db_password}
       init: ec2.CloudFormationInit.fromElements(
         ec2.InitSource.fromGitHub('/opt/app', 'rickyriosp', 'cloudtalents-bootcamp-application'),
         ec2.InitFile.fromString('/opt/app/secrets.sh', db_secrets),
+        ec2.InitCommand.shellCommand('/opt/app/cloudtalents-bootcamp-application/setup.sh')
       ),
     });
 
