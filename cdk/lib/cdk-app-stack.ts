@@ -80,9 +80,15 @@ export class CloudTalentsAppStack extends cdk.Stack {
     });
 
     // ec2Instance.userData.addExecuteFileCommand({
-    //   filePath: path.join(__dirname, '..', 'resources', 'new_install.sh'),
+    //   filePath: path.join(__filename, '..', 'resources', 'new_install.sh'),
     // });
 
     ec2Instance.applyRemovalPolicy(cdk.RemovalPolicy.DESTROY);
+
+    const webAppUrl = new cdk.CfnOutput(this, 'WebAppUrl', {
+      value: `http://${ec2Instance.instancePublicIp}/`,
+      description: 'The URL of our instance',
+      exportName: 'WebAppUrl'
+    });
   }
 }
