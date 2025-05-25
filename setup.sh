@@ -9,6 +9,7 @@ INSTANCE_ID=$( curl -H "X-aws-ec2-metadata-token: $TOKEN" -v http://169.254.169.
 sudo echo "AMI Hostname: $LOCAL_HOSTNAME" >> /home/ec2-user/config.txt
 sudo echo "AMI InstanceId: $INSTANCE_ID" >> /home/ec2-user/config.txt
 
+# https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/cfn-helper-scripts-reference.html
 sudo apt-get install aws-cfn-bootstrap -y
 
 #################################################################################################
@@ -30,11 +31,20 @@ sudo chown -R ec2-user:ec2-user $APP_DIR
 #################################################################################################
 sudo apt-get update -y
 sudo apt-get upgrade -y
+sudo apt-get install build-essential -y
 sudo apt-get install python3-pip -y
 sudo apt-get install python3-venv -y
 sudo apt-get install postgresql -y
 sudo apt-get install postgresql-contrib -y
 sudo apt-get install nginx -y
+
+#################################################################################################
+# Install AWS CloudFormation helper scripts
+# Relevant link: https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/cfn-helper-scripts-reference.html
+#################################################################################################
+sudo mkdir -p /opt/aws/
+sudo pip3 install https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-py3-latest.tar.gz --break-system-packages
+sudo ln -s /usr/local/init/ubuntu/cfn-hup /etc/init.d/cfn-hup
 
 #################################################################################################
 # Start and enable the PostgreSQL service

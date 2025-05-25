@@ -44,6 +44,7 @@ export DB_PASSWORD=${db_password}
       //   'us-east-1': 'ami-09b9b5665040249ad'
       // }),
       machineImage: ec2.MachineImage.fromSsmParameter(
+        //https://documentation.ubuntu.com/aws/aws-how-to/instances/find-ubuntu-images/
         '/aws/service/canonical/ubuntu/server/24.04/stable/current/amd64/hvm/ebs-gp3/ami-id',
         { os: ec2.OperatingSystemType.LINUX },
       ),
