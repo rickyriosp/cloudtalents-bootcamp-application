@@ -44,7 +44,7 @@ export DB_PASSWORD=${db_password}
       //   'us-east-1': 'ami-09b9b5665040249ad'
       // }),
       machineImage: ec2.MachineImage.fromSsmParameter(
-        '/aws/service/canonical/ubuntu/server/24.04/stable/current/amd64/hvm/ebs-gp2/ami-id',
+        '/aws/service/canonical/ubuntu/server/24.04/stable/current/amd64/hvm/ebs-gp3/ami-id',
         { os: ec2.OperatingSystemType.LINUX },
       ),
       instanceType: ec2.InstanceType.of(ec2.InstanceClass.T2, ec2.InstanceSize.MICRO),
