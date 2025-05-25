@@ -9,6 +9,9 @@ INSTANCE_ID=$( curl -H "X-aws-ec2-metadata-token: $TOKEN" -v http://169.254.169.
 sudo echo "AMI Hostname: $LOCAL_HOSTNAME" >> /home/ubuntu/config.txt
 sudo echo "AMI InstanceId: $INSTANCE_ID" >> /home/ubuntu/config.txt
 
+sudo mkdir -p $APP_DIR
+sudo git clone https://github.com/rickyriosp/cloudtalents-bootcamp-application.git $APP_DIR
+
 #################################################################################################
 # Make the ubuntu user owner of all files and directories under $APP_DIR (recursively)
 #
@@ -40,7 +43,7 @@ sudo apt-get install nginx -y
 #
 # Relevant link: https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/cfn-helper-scripts-reference.html
 #################################################################################################
-sudo mkdir -p /opt/aws/
+sudo mkdir -p /opt/aws/bin/
 sudo pip3 install https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-py3-latest.tar.gz --break-system-packages
 sudo ln -s /usr/local/init/ubuntu/cfn-hup /etc/init.d/cfn-hup
 sudo ln -s /usr/local/bin/cfn-* /opt/aws/bin/
