@@ -43,6 +43,7 @@ sudo apt-get install nginx -y
 sudo mkdir -p /opt/aws/
 sudo pip3 install https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-py3-latest.tar.gz --break-system-packages
 sudo ln -s /usr/local/init/ubuntu/cfn-hup /etc/init.d/cfn-hup
+sudo ln -s /usr/local/bin/cfn-* /opt/aws/bin/
 
 #################################################################################################
 # Start and enable the PostgreSQL service

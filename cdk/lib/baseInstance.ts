@@ -30,6 +30,11 @@ export DB_PASSWORD=${db_password}
     // ----------------------------------------------------------------------
     // EC2 Instance
     // ----------------------------------------------------------------------
+    const userData = ec2.UserData.forLinux();
+    userData.addExecuteFileCommand({
+      filePath: 'setup.sh',
+    });
+
     const baseInstance = new ec2.Instance(this, `ec2-instance-${props.randomId}`, {
       instanceName: `base-instance-${props.randomId}`,
       vpc: props.vpc,
@@ -48,7 +53,7 @@ export DB_PASSWORD=${db_password}
         '/aws/service/canonical/ubuntu/server/24.04/stable/current/amd64/hvm/ebs-gp3/ami-id',
         {
           os: ec2.OperatingSystemType.LINUX,
-          // userData: ec2.UserData.forLinux()
+          userData: userData,
         },
       ),
       instanceType: ec2.InstanceType.of(ec2.InstanceClass.T2, ec2.InstanceSize.MICRO),
@@ -70,9 +75,9 @@ export DB_PASSWORD=${db_password}
       ),
     });
 
-    baseInstance.userData.addExecuteFileCommand({
-      filePath: path.join(__filename, '..', '..', '..', 'setup.sh'),
-    });
+    // baseInstance.userData.addExecuteFileCommand({
+    //   filePath: path.join(__filename, '..', '..', '..', 'setup.sh'),
+    // });
 
     baseInstance.applyRemovalPolicy(cdk.RemovalPolicy.DESTROY);
 
