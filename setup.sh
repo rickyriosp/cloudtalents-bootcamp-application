@@ -9,6 +9,8 @@ INSTANCE_ID=$( curl -H "X-aws-ec2-metadata-token: $TOKEN" -v http://169.254.169.
 sudo echo "AMI Hostname: $LOCAL_HOSTNAME" >> /home/ec2-user/config.txt
 sudo echo "AMI InstanceId: $INSTANCE_ID" >> /home/ec2-user/config.txt
 
+sudo apt-get install aws-cfn-bootstrap -y
+
 #################################################################################################
 # Make the ubuntu user owner of all files and directories under $APP_DIR (recursively)
 #
