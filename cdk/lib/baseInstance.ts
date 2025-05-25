@@ -53,7 +53,7 @@ export DB_PASSWORD=${db_password}
         '/aws/service/canonical/ubuntu/server/24.04/stable/current/amd64/hvm/ebs-gp3/ami-id',
         {
           os: ec2.OperatingSystemType.LINUX,
-          // userData: userData,
+          userData: userData,
         },
       ),
       instanceType: ec2.InstanceType.of(ec2.InstanceClass.T2, ec2.InstanceSize.MICRO),
