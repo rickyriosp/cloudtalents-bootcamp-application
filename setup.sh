@@ -9,9 +9,6 @@ INSTANCE_ID=$( curl -H "X-aws-ec2-metadata-token: $TOKEN" -v http://169.254.169.
 sudo echo "AMI Hostname: $LOCAL_HOSTNAME" >> /home/ec2-user/config.txt
 sudo echo "AMI InstanceId: $INSTANCE_ID" >> /home/ec2-user/config.txt
 
-# https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/cfn-helper-scripts-reference.html
-sudo apt-get install aws-cfn-bootstrap -y
-
 #################################################################################################
 # Make the ubuntu user owner of all files and directories under $APP_DIR (recursively)
 #
@@ -40,6 +37,7 @@ sudo apt-get install nginx -y
 
 #################################################################################################
 # Install AWS CloudFormation helper scripts
+#
 # Relevant link: https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/cfn-helper-scripts-reference.html
 #################################################################################################
 sudo mkdir -p /opt/aws/
