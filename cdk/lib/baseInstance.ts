@@ -2,6 +2,7 @@ import * as cdk from 'aws-cdk-lib';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import { Construct } from 'constructs';
+import { readFileSync } from 'fs';
 
 import path = require('path');
 
@@ -31,9 +32,11 @@ export DB_PASSWORD=${db_password}
     // EC2 Instance
     // ----------------------------------------------------------------------
     const userData = ec2.UserData.forLinux();
-    userData.addExecuteFileCommand({
-      filePath: '../../../setup.sh',
-    });
+    userData.addCommands(
+      readFileSync(path.join(__filename, '..', '..', '..', 'setup.sh'), {
+        encoding: 'utf-8',
+      }),
+    );
 
     const baseInstance = new ec2.Instance(this, `ec2-instance-${props.randomId}`, {
       instanceName: `base-instance-${props.randomId}`,
@@ -72,7 +75,7 @@ export DB_PASSWORD=${db_password}
       init: ec2.CloudFormationInit.fromElements(
         ec2.InitSource.fromGitHub('/opt/app', 'rickyriosp', 'cloudtalents-bootcamp-application'),
         ec2.InitFile.fromString('/opt/app/secrets.sh', db_secrets),
-        ec2.InitCommand.shellCommand('/opt/app/cloudtalents-bootcamp-application/setup.sh')
+        ec2.InitCommand.shellCommand('/opt/app/cloudtalents-bootcamp-application/setup.sh'),
       ),
     });
 
