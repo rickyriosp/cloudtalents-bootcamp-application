@@ -66,9 +66,9 @@ export DB_PASSWORD=${db_password}
       ),
     });
 
-    baseInstance.userData.addExecuteFileCommand({
-      filePath: path.join(__dirname, '..', 'resources', 'base_install.sh'),
-    });
+    // baseInstance.userData.addExecuteFileCommand({
+    //   filePath: path.join(__dirname, '..', 'resources', 'base_install.sh'),
+    // });
 
     baseInstance.applyRemovalPolicy(cdk.RemovalPolicy.DESTROY);
 
