@@ -59,7 +59,7 @@ export DB_PASSWORD=${db_password}
         },
       ],
       userDataCausesReplacement: true,
-      //   userData: ec2.UserData.forLinux(),
+      userData: ec2.UserData.forLinux(),
       init: ec2.CloudFormationInit.fromElements(
         ec2.InitSource.fromGitHub('/opt/app', 'rickyriosp', 'cloudtalents-bootcamp-application'),
         ec2.InitFile.fromString('/opt/app/secrets.sh', db_secrets),
