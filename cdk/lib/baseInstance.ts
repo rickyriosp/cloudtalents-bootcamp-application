@@ -32,7 +32,7 @@ export DB_PASSWORD=${db_password}
     // ----------------------------------------------------------------------
     const userData = ec2.UserData.forLinux();
     userData.addExecuteFileCommand({
-      filePath: 'setup.sh',
+      filePath: '/opt/app/setup.sh',
     });
 
     const baseInstance = new ec2.Instance(this, `ec2-instance-${props.randomId}`, {
