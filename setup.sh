@@ -33,14 +33,15 @@ sudo apt-get install nginx -y
 #
 # Relevant link: https://www.digitalocean.com/community/tutorials/how-to-use-systemctl-to-manage-systemd-services-and-units
 #################################################################################################
-sudo systemctl start postgresql.service
+sudo systemctl start postgresql
 
 #################################################################################################
 # Load the secret values from secrets.sh
 #
 # Relevant link: https://www.tutorialspoint.com/linux-source-command
 #################################################################################################
-source $APP_DIR/secrets.sh
+# source $APP_DIR/secrets.sh # for bash shell
+. $APP_DIR/secrets.sh # for sh shell
 
 #################################################################################################
 # Configure PostgreSQL database based on details from secrets.sh
