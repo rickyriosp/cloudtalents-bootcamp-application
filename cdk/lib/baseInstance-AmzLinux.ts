@@ -2,7 +2,6 @@ import * as cdk from 'aws-cdk-lib';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import { Construct } from 'constructs';
-import { readFileSync } from 'fs';
 
 import path = require('path');
 
@@ -31,15 +30,6 @@ export DB_PASSWORD=${db_password}
     // ----------------------------------------------------------------------
     // EC2 Instance
     // ----------------------------------------------------------------------
-    const userData = ec2.UserData.forLinux();
-    userData.addCommands(
-      readFileSync(path.join(__filename, '..', '..', 'resources', 'base_install_ubuntu.sh'), {
-        encoding: 'utf-8',
-      }),
-    );
-    // console.log('filename: ' + path.join(__filename, '..', '..', 'resources', 'base_install_ubuntu.sh'));
-    // console.log('dirname: ' + path.join(__dirname, '..', 'resources', 'base_install_ubuntu.sh'));
-
     const baseInstance = new ec2.Instance(this, `ec2-instance-${props.randomId}`, {
       instanceName: `base-instance-${props.randomId}`,
       vpc: props.vpc,
@@ -49,18 +39,7 @@ export DB_PASSWORD=${db_password}
       }),
       securityGroup: props.ec2SecurityGroup,
       instanceProfile: props.ec2InstanceProfile,
-      // machineImage: ec2.MachineImage.genericLinux({
-      //   //https://cloud-images.ubuntu.com/locator/ec2/
-      //   'us-east-1': 'ami-09b9b5665040249ad'
-      // }),
-      machineImage: ec2.MachineImage.fromSsmParameter(
-        //https://documentation.ubuntu.com/aws/aws-how-to/instances/find-ubuntu-images/
-        '/aws/service/canonical/ubuntu/server/24.04/stable/current/amd64/hvm/ebs-gp3/ami-id',
-        {
-          os: ec2.OperatingSystemType.LINUX,
-          userData: userData,
-        },
-      ),
+      machineImage: ec2.MachineImage.latestAmazonLinux2023(),
       instanceType: ec2.InstanceType.of(ec2.InstanceClass.T2, ec2.InstanceSize.MICRO),
       associatePublicIpAddress: true,
       blockDevices: [
@@ -73,17 +52,16 @@ export DB_PASSWORD=${db_password}
         },
       ],
       userDataCausesReplacement: true,
-      // userData: ec2.UserData.forLinux(),
+      //   userData: ec2.UserData.forLinux(),
       init: ec2.CloudFormationInit.fromElements(
         ec2.InitSource.fromGitHub('/opt/app', 'rickyriosp', 'cloudtalents-bootcamp-application'),
         ec2.InitFile.fromString('/opt/app/secrets.sh', db_secrets),
-        // ec2.InitCommand.shellCommand('/opt/app/setup.sh'),
       ),
     });
 
-    // baseInstance.userData.addExecuteFileCommand({
-    //   filePath: path.join(__filename, '..', '..', '..', 'setup.sh'),
-    // });
+    baseInstance.userData.addExecuteFileCommand({
+      filePath: path.join(__dirname, '..', 'resources', 'base_install.sh'),
+    });
 
     baseInstance.applyRemovalPolicy(cdk.RemovalPolicy.DESTROY);
 
