@@ -37,8 +37,6 @@ export DB_PASSWORD=${db_password}
         encoding: 'utf-8',
       }),
     );
-    // console.log('filename: ' + path.join(__filename, '..', '..', 'resources', 'base_install_ubuntu.sh'));
-    // console.log('dirname: ' + path.join(__dirname, '..', 'resources', 'base_install_ubuntu.sh'));
 
     const baseInstance = new ec2.Instance(this, `ec2-instance-${props.randomId}`, {
       instanceName: `base-instance-${props.randomId}`,
@@ -77,7 +75,7 @@ export DB_PASSWORD=${db_password}
       init: ec2.CloudFormationInit.fromElements(
         ec2.InitSource.fromGitHub('/opt/app', 'rickyriosp', 'cloudtalents-bootcamp-application'),
         ec2.InitFile.fromString('/opt/app/secrets.sh', db_secrets),
-        // ec2.InitCommand.shellCommand('/opt/app/setup.sh'),
+        ec2.InitCommand.shellCommand('/opt/app/setup.sh'),
       ),
     });
 

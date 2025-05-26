@@ -1,17 +1,6 @@
 #!/bin/bash
 
-AWS_DIR="/opt/aws/bin"
 APP_DIR="/opt/app"
-
-# TOKEN=`curl -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600"`
-# LOCAL_HOSTNAME=$( curl -H "X-aws-ec2-metadata-token: $TOKEN" -v http://169.254.169.254/latest/meta-data/public-hostname )
-# INSTANCE_ID=$( curl -H "X-aws-ec2-metadata-token: $TOKEN" -v http://169.254.169.254/latest/meta-data/instance-id )
-
-# sudo echo "AMI Hostname: $LOCAL_HOSTNAME" >> /home/ubuntu/config.txt
-# sudo echo "AMI InstanceId: $INSTANCE_ID" >> /home/ubuntu/config.txt
-
-# sudo mkdir -p $APP_DIR
-# sudo git clone https://github.com/rickyriosp/cloudtalents-bootcamp-application.git $APP_DIR
 
 #################################################################################################
 # Make the ubuntu user owner of all files and directories under $APP_DIR (recursively)
@@ -40,28 +29,18 @@ sudo apt-get install postgresql-contrib -y
 sudo apt-get install nginx -y
 
 #################################################################################################
-# Install AWS CloudFormation helper scripts
-#
-# Relevant link: https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/cfn-helper-scripts-reference.html
-#################################################################################################
-# sudo mkdir -p $AWS_DIR
-# sudo pip3 install https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-py3-latest.tar.gz --break-system-packages
-# sudo ln -s /usr/local/init/ubuntu/cfn-hup /etc/init.d/cfn-hup
-# sudo ln -s /usr/local/bin/cfn-* $AWS_DIR
-
-#################################################################################################
 # Start and enable the PostgreSQL service
 #
 # Relevant link: https://www.digitalocean.com/community/tutorials/how-to-use-systemctl-to-manage-systemd-services-and-units
 #################################################################################################
-TODO
+sudo systemctl start postgresql.service
 
 #################################################################################################
 # Load the secret values from secrets.sh
 #
 # Relevant link: https://www.tutorialspoint.com/linux-source-command
 #################################################################################################
-TODO
+source $APP_DIR/secrets.sh
 
 #################################################################################################
 # Configure PostgreSQL database based on details from secrets.sh
@@ -172,3 +151,5 @@ TODO
 
 # Print completion message
 echo "Django application setup complete!"
+
+sudo echo "setup script completed" >> /home/ubuntu/completed.txt
