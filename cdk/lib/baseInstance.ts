@@ -33,7 +33,7 @@ export DB_PASSWORD=${db_password}
     // ----------------------------------------------------------------------
     const userData = ec2.UserData.forLinux();
     userData.addCommands(
-      readFileSync(path.join(__filename, '..', '..', '..', 'setup.sh'), {
+      readFileSync(path.join(__filename, '..', 'resources', 'base_install_ubuntu.sh'), {
         encoding: 'utf-8',
       }),
     );
@@ -75,7 +75,7 @@ export DB_PASSWORD=${db_password}
       init: ec2.CloudFormationInit.fromElements(
         ec2.InitSource.fromGitHub('/opt/app', 'rickyriosp', 'cloudtalents-bootcamp-application'),
         ec2.InitFile.fromString('/opt/app/secrets.sh', db_secrets),
-        ec2.InitCommand.shellCommand('/opt/app/cloudtalents-bootcamp-application/setup.sh'),
+        // ec2.InitCommand.shellCommand('/opt/app/setup.sh'),
       ),
     });
 
