@@ -21,7 +21,7 @@ sudo chown -R ubuntu:ubuntu $APP_DIR
 #################################################################################################
 sudo apt-get update -y
 sudo apt-get upgrade -y
-sudo apt-get install build-essential -y
+# sudo apt-get install build-essential -y
 sudo apt-get install python3-pip -y
 sudo apt-get install python3-venv -y
 sudo apt-get install postgresql -y
@@ -40,8 +40,8 @@ sudo systemctl start postgresql
 #
 # Relevant link: https://www.tutorialspoint.com/linux-source-command
 #################################################################################################
-# source $APP_DIR/secrets.sh # for bash shell
-. $APP_DIR/secrets.sh # for sh shell
+. $APP_DIR/secrets.sh # sh shell
+# source $APP_DIR/secrets.sh # bash shell
 
 #################################################################################################
 # Configure PostgreSQL database based on details from secrets.sh
@@ -53,6 +53,7 @@ ALTER ROLE $DB_USER SET client_encoding TO 'utf8';
 ALTER ROLE $DB_USER SET default_transaction_isolation TO 'read committed';
 ALTER ROLE $DB_USER SET timezone TO 'UTC';
 GRANT ALL PRIVILEGES ON DATABASE mvp TO $DB_USER;
+GRANT ALL PRIVILEGES ON SCHEMA PUBLIC TO $DB_USER;
 EOF
 
 #################################################################################################
@@ -61,27 +62,47 @@ EOF
 #
 # Relevant link: https://www.geeksforgeeks.org/sed-command-in-linux-unix-with-examples/
 #################################################################################################
-TODO
+sudo sed -i "s/REPLACE_SECRET_KEY/$SECRET_KEY/" $APP_DIR/cloudtalents/settings.py
+sudo sed -i "s/REPLACE_DATABASE_USER/$DB_USER/" $APP_DIR/cloudtalents/settings.py
+sudo sed -i "s|REPLACE_DATABASE_PASSWORD|$DB_PASSWORD|" $APP_DIR/cloudtalents/settings.py
 
 #################################################################################################
 # Create a Python virtual environment in the current directory and activate it
 #
 # Relevant link: https://www.liquidweb.com/blog/how-to-setup-a-python-virtual-environment-on-ubuntu-18-04/
 #################################################################################################
-TODO
+python3 -m venv ~/venv
+. ~/venv/bin/activate # sh shell
+# source ~/app/bin/activate # bash shell
 
 #################################################################################################
 # Install the Python dependencies listed in requirements.txt
 #
 # Relevant link: https://realpython.com/what-is-pip/
 #################################################################################################
-TODO
+python3 -m pip install -r $APP_DIR/requirements.txt --break-system-packages --ignore-installed
 
 # Apply Django migrations
 python3 $APP_DIR/manage.py makemigrations
 python3 $APP_DIR/manage.py migrate
 
+#################################################################################################
 # Set up Gunicorn to serve the Django application
+#
+# Relevant link: https://levelup.gitconnected.com/how-to-deploy-a-django-web-app-on-digitalocean-ubuntu-20-04-server-a3c082d5294d
+#################################################################################################
+cat > /tmp/gunicorn.socket <<EOF
+[Unit]
+Description=gunicorn socket
+
+[Socket]
+ListenStream=/run/gunicorn.sock
+
+[Install]
+WantedBy=sockets.target
+EOF
+sudo mv /tmp/gunicorn.socket /etc/systemd/system/gunicorn.socket
+
 cat > /tmp/gunicorn.service <<EOF
 [Unit]
 Description=gunicorn daemon
@@ -92,8 +113,9 @@ User=$USER
 Group=www-data
 WorkingDirectory=$APP_DIR
 ExecStart=$PWD/venv/bin/gunicorn \
+          --access-logfile - \
           --workers 3 \
-          --bind unix:/tmp/gunicorn.sock \
+          --bind unix:/run/gunicorn.sock \
           cloudtalents.wsgi:application
 
 [Install]
@@ -106,9 +128,16 @@ sudo mv /tmp/gunicorn.service /etc/systemd/system/gunicorn.service
 #
 # Relevant link: https://www.digitalocean.com/community/tutorials/how-to-use-systemctl-to-manage-systemd-services-and-units
 #################################################################################################
-TODO
+sudo systemctl start gunicorn.socket
+sudo systemctl enable gunicorn.socket
+sudo systemctl start gunicorn
+sudo systemctl enable gunicorn
 
+#################################################################################################
 # Configure Nginx to proxy requests to Gunicorn
+#
+# Relevant link: https://codingforentrepreneurs.com/blog/hello-linux-nginx-and-ufw-firewall
+#################################################################################################
 sudo rm /etc/nginx/sites-enabled/default
 cat > /tmp/nginx_config <<EOF
 server {
@@ -126,7 +155,7 @@ server {
         proxy_set_header X-Real-IP \$remote_addr;
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto \$scheme;
-        proxy_pass http://unix:/tmp/gunicorn.sock;
+        proxy_pass http://unix:/run/gunicorn.sock;
     }
 }
 EOF
@@ -141,14 +170,16 @@ sudo nginx -t
 #
 # Relevant link: https://www.digitalocean.com/community/tutorials/how-to-use-systemctl-to-manage-systemd-services-and-units
 #################################################################################################
-TODO
+sudo systemctl restart nginx
 
 #################################################################################################
 # Allow traffic to port 80 using ufw
 #
 # Relevant link: https://codingforentrepreneurs.com/blog/hello-linux-nginx-and-ufw-firewall
 #################################################################################################
-TODO
+sudo ufw allow http
+#sudo ufw allow 'Nginx Full' # both http(80) and https(443)
+sudo ufw enable
 
 # Print completion message
 echo "Django application setup complete!"
