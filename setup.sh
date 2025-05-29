@@ -32,7 +32,10 @@ sudo apt-get install nginx -y
 # Start and enable the PostgreSQL service
 #
 # Relevant link: https://www.digitalocean.com/community/tutorials/how-to-use-systemctl-to-manage-systemd-services-and-units
+# Relevant link: https://stackoverflow.com/questions/84882/sudo-echo-something-etc-privilegedfile-doesnt-work
 #################################################################################################
+echo 'dbuser	ssm-user	dbuser' | sudo tee -a /etc/postgresql/16/main/pg_ident.conf
+echo 'local	all	dbuser		peer map=dbuser' | sudo tee -a /etc/postgresql/16/main/pg_hba.conf
 sudo systemctl start postgresql
 
 #################################################################################################
@@ -53,6 +56,7 @@ ALTER ROLE $DB_USER SET client_encoding TO 'utf8';
 ALTER ROLE $DB_USER SET default_transaction_isolation TO 'read committed';
 ALTER ROLE $DB_USER SET timezone TO 'UTC';
 GRANT ALL PRIVILEGES ON DATABASE mvp TO $DB_USER;
+ALTER DATABASE mvp OWNER TO $DB_USER;
 GRANT ALL PRIVILEGES ON SCHEMA PUBLIC TO $DB_USER;
 EOF
 
