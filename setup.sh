@@ -19,13 +19,13 @@ sudo chown -R ubuntu:ubuntu $APP_DIR
 # 
 # Relevant link: https://ubuntu.com/server/docs/package-management
 #################################################################################################
-sudo apt-get update -y
-sudo apt-get upgrade -y
-# sudo apt-get install build-essential -y
-sudo apt-get install python3-pip -y
-sudo apt-get install python3-venv -y
-sudo apt-get install postgresql -y
-sudo apt-get install postgresql-contrib -y
+sudo apt-get update -y && 
+sudo apt-get upgrade -y && 
+sudo apt-get install build-essential -y && 
+sudo apt-get install python3-pip -y && 
+sudo apt-get install python3-venv -y && 
+sudo apt-get install postgresql -y && 
+sudo apt-get install postgresql-contrib -y && 
 sudo apt-get install nginx -y
 
 #################################################################################################
@@ -34,8 +34,8 @@ sudo apt-get install nginx -y
 # Relevant link: https://www.digitalocean.com/community/tutorials/how-to-use-systemctl-to-manage-systemd-services-and-units
 # Relevant link: https://stackoverflow.com/questions/84882/sudo-echo-something-etc-privilegedfile-doesnt-work
 #################################################################################################
-echo 'dbuser	ssm-user	dbuser' | sudo tee -a /etc/postgresql/16/main/pg_ident.conf
-echo 'local	all	dbuser		peer map=dbuser' | sudo tee -a /etc/postgresql/16/main/pg_hba.conf
+echo 'dbuser	ssm-user	dbuser' | sudo tee -a /etc/postgresql/16/main/pg_ident.conf >> /dev/null
+echo 'local	all	dbuser		peer map=dbuser' | sudo tee -a /etc/postgresql/16/main/pg_hba.conf >> /dev/null
 sudo systemctl start postgresql
 
 #################################################################################################
@@ -57,7 +57,6 @@ ALTER ROLE $DB_USER SET default_transaction_isolation TO 'read committed';
 ALTER ROLE $DB_USER SET timezone TO 'UTC';
 GRANT ALL PRIVILEGES ON DATABASE mvp TO $DB_USER;
 ALTER DATABASE mvp OWNER TO $DB_USER;
-GRANT ALL PRIVILEGES ON SCHEMA PUBLIC TO $DB_USER;
 EOF
 
 #################################################################################################
@@ -75,7 +74,7 @@ sudo sed -i "s|REPLACE_DATABASE_PASSWORD|$DB_PASSWORD|" $APP_DIR/cloudtalents/se
 #
 # Relevant link: https://www.liquidweb.com/blog/how-to-setup-a-python-virtual-environment-on-ubuntu-18-04/
 #################################################################################################
-python3 -m venv ~/venv
+python3 -m venv $HOME/venv
 . ~/venv/bin/activate # sh shell
 # source ~/app/bin/activate # bash shell
 
@@ -116,7 +115,7 @@ After=network.target
 User=$USER
 Group=www-data
 WorkingDirectory=$APP_DIR
-ExecStart=$PWD/venv/bin/gunicorn \
+ExecStart=$HOME/venv/bin/gunicorn \
           --access-logfile - \
           --workers 3 \
           --bind unix:/run/gunicorn.sock \
@@ -134,8 +133,6 @@ sudo mv /tmp/gunicorn.service /etc/systemd/system/gunicorn.service
 #################################################################################################
 sudo systemctl start gunicorn.socket
 sudo systemctl enable gunicorn.socket
-sudo systemctl start gunicorn
-sudo systemctl enable gunicorn
 
 #################################################################################################
 # Configure Nginx to proxy requests to Gunicorn
