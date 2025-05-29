@@ -58,8 +58,8 @@ export class CloudTalentsAppStack extends cdk.Stack {
     // ----------------------------------------------------------------------
     // EC2 Instance
     // ----------------------------------------------------------------------
-    const ec2Instance = new ec2.Instance(this, 'ec2-instance', {
-      instanceName: 'cloudtalents-app',
+    const ec2Instance = new ec2.Instance(this, `ec2-instance-${version}`, {
+      instanceName: `cloudtalents-app-${version}`,
       vpc: vpc,
       vpcSubnets: vpc.selectSubnets({
         subnets: vpc.publicSubnets,
