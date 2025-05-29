@@ -63,7 +63,7 @@ export DB_PASSWORD=${db_password}
       associatePublicIpAddress: true,
       blockDevices: [
         {
-          deviceName: '/dev/xvda',
+          deviceName: '/dev/sda1',
           volume: ec2.BlockDeviceVolume.ebs(10, {
             volumeType: ec2.EbsDeviceVolumeType.GENERAL_PURPOSE_SSD_GP3,
             deleteOnTermination: true,
@@ -75,7 +75,7 @@ export DB_PASSWORD=${db_password}
       init: ec2.CloudFormationInit.fromElements(
         ec2.InitSource.fromGitHub('/opt/app', 'rickyriosp', 'cloudtalents-bootcamp-application'),
         ec2.InitFile.fromString('/opt/app/secrets.sh', db_secrets),
-        ec2.InitCommand.shellCommand('/opt/app/setup.sh'),
+        // ec2.InitCommand.shellCommand('/opt/app/setup.sh'),
       ),
     });
 
