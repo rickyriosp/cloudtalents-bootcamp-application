@@ -1,13 +1,23 @@
 #!/bin/bash
 
 APP_DIR="/opt/app"
+SECRETS="$APP_DIR/secrets.sh"
+POSTGRES_VERSION="16"
+USER="ubuntu"
+HOME="/home/ubuntu"
+VENV="$HOME/venv"
+
+# Redirect all output to log
+exec > >(tee /var/log/user-data.log | logger -t user-data) 2>&1
+trap 'echo "ERROR at line $LINENO"; exit 1' ERR
+
 
 #################################################################################################
 # Make the ubuntu user owner of all files and directories under $APP_DIR (recursively)
 #
 # Relevant link: https://www.geeksforgeeks.org/chown-command-in-linux-with-examples/
 #################################################################################################
-sudo chown -R ubuntu:ubuntu $APP_DIR
+chown -R ubuntu:ubuntu $APP_DIR
 
 #################################################################################################
 # Update Ubuntu's package list and install the following dependencies:
@@ -19,14 +29,9 @@ sudo chown -R ubuntu:ubuntu $APP_DIR
 # 
 # Relevant link: https://ubuntu.com/server/docs/package-management
 #################################################################################################
-sudo apt-get update -y && 
-sudo apt-get upgrade -y && 
-sudo apt-get install build-essential -y && 
-sudo apt-get install python3-pip -y && 
-sudo apt-get install python3-venv -y && 
-sudo apt-get install postgresql -y && 
-sudo apt-get install postgresql-contrib -y && 
-sudo apt-get install nginx -y
+apt-get update -y
+apt-get upgrade -y
+apt-get install -y build-essential python3-pip python3-venv postgresql-$POSTGRES_VERSION postgresql-contrib-$POSTGRES_VERSION nginx
 
 #################################################################################################
 # Start and enable the PostgreSQL service
@@ -34,17 +39,23 @@ sudo apt-get install nginx -y
 # Relevant link: https://www.digitalocean.com/community/tutorials/how-to-use-systemctl-to-manage-systemd-services-and-units
 # Relevant link: https://stackoverflow.com/questions/84882/sudo-echo-something-etc-privilegedfile-doesnt-work
 #################################################################################################
-echo 'dbuser	ssm-user	dbuser' | sudo tee -a /etc/postgresql/16/main/pg_ident.conf >> /dev/null
-echo 'local	all	dbuser		peer map=dbuser' | sudo tee -a /etc/postgresql/16/main/pg_hba.conf >> /dev/null
-sudo systemctl start postgresql
+echo 'dbuser	ubuntu	dbuser' | sudo tee -a /etc/postgresql/$POSTGRES_VERSION/main/pg_ident.conf >> /dev/null
+echo 'local	all	dbuser		peer map=dbuser' | sudo tee -a /etc/postgresql/$POSTGRES_VERSION/main/pg_hba.conf >> /dev/null
+systemctl enable postgresql
+systemctl start postgresql
 
 #################################################################################################
 # Load the secret values from secrets.sh
 #
 # Relevant link: https://www.tutorialspoint.com/linux-source-command
 #################################################################################################
-. $APP_DIR/secrets.sh # sh shell
+# . $APP_DIR/secrets.sh # sh shell
 # source $APP_DIR/secrets.sh # bash shell
+if [ -f "$SECRETS" ]; then
+  . "$SECRETS"
+else
+  echo "❌ secrets.sh not found. Aborting." && exit 1
+fi
 
 #################################################################################################
 # Configure PostgreSQL database based on details from secrets.sh
@@ -65,17 +76,17 @@ EOF
 #
 # Relevant link: https://www.geeksforgeeks.org/sed-command-in-linux-unix-with-examples/
 #################################################################################################
-sudo sed -i "s/REPLACE_SECRET_KEY/$SECRET_KEY/" $APP_DIR/cloudtalents/settings.py
-sudo sed -i "s/REPLACE_DATABASE_USER/$DB_USER/" $APP_DIR/cloudtalents/settings.py
-sudo sed -i "s|REPLACE_DATABASE_PASSWORD|$DB_PASSWORD|" $APP_DIR/cloudtalents/settings.py
+sed -i "s/REPLACE_SECRET_KEY/$SECRET_KEY/" $APP_DIR/cloudtalents/settings.py
+sed -i "s/REPLACE_DATABASE_USER/$DB_USER/" $APP_DIR/cloudtalents/settings.py
+sed -i "s|REPLACE_DATABASE_PASSWORD|$DB_PASSWORD|" $APP_DIR/cloudtalents/settings.py
 
 #################################################################################################
 # Create a Python virtual environment in the current directory and activate it
 #
 # Relevant link: https://www.liquidweb.com/blog/how-to-setup-a-python-virtual-environment-on-ubuntu-18-04/
 #################################################################################################
-python3 -m venv $HOME/venv
-. ~/venv/bin/activate # sh shell
+python3 -m venv $VENV
+. $VENV/bin/activate # sh shell
 # source ~/app/bin/activate # bash shell
 
 #################################################################################################
@@ -115,7 +126,7 @@ After=network.target
 User=$USER
 Group=www-data
 WorkingDirectory=$APP_DIR
-ExecStart=$HOME/venv/bin/gunicorn \
+ExecStart=$VENV/bin/gunicorn \
           --access-logfile - \
           --workers 3 \
           --bind unix:/run/gunicorn.sock \
@@ -131,15 +142,16 @@ sudo mv /tmp/gunicorn.service /etc/systemd/system/gunicorn.service
 #
 # Relevant link: https://www.digitalocean.com/community/tutorials/how-to-use-systemctl-to-manage-systemd-services-and-units
 #################################################################################################
-sudo systemctl start gunicorn.socket
-sudo systemctl enable gunicorn.socket
+systemctl daemon-reexec
+systemctl start gunicorn.socket
+systemctl enable gunicorn.socket
 
 #################################################################################################
 # Configure Nginx to proxy requests to Gunicorn
 #
 # Relevant link: https://codingforentrepreneurs.com/blog/hello-linux-nginx-and-ufw-firewall
 #################################################################################################
-sudo rm /etc/nginx/sites-enabled/default
+rm /etc/nginx/sites-enabled/default
 cat > /tmp/nginx_config <<EOF
 server {
     listen 80;
@@ -163,8 +175,8 @@ EOF
 sudo mv /tmp/nginx_config /etc/nginx/sites-available/cloudtalents
 
 # Enable and test the Nginx configuration
-sudo ln -s /etc/nginx/sites-available/cloudtalents /etc/nginx/sites-enabled
-sudo nginx -t
+ln -s /etc/nginx/sites-available/cloudtalents /etc/nginx/sites-enabled
+nginx -t
 
 #################################################################################################
 # Restart the nginx service to reload the configuration
@@ -178,11 +190,10 @@ sudo systemctl restart nginx
 #
 # Relevant link: https://codingforentrepreneurs.com/blog/hello-linux-nginx-and-ufw-firewall
 #################################################################################################
-sudo ufw allow http
 #sudo ufw allow 'Nginx Full' # both http(80) and https(443)
-sudo ufw enable
+ufw allow http
+echo "y" | ufw enable
 
 # Print completion message
-echo "Django application setup complete!"
-
-sudo echo "setup script completed" >> /home/ubuntu/completed.txt
+echo "✅ Django application setup complete!"
+echo "setup script completed" > /home/ubuntu/completed.txt
