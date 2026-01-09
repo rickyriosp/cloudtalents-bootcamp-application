@@ -178,5 +178,6 @@
         ]
       }
     ]
-  }
+  },
+  "cli-telemetry": false
 }
